@@ -4,7 +4,7 @@ A fully functional, responsive e-commerce platform built with React.js, Java Spr
 
 ## 🌐 Live Demo & Links
 - **Live Website (Frontend):** [Deploying to Vercel... Placeholder URL]
-- **Live API (Backend):** [Deploying to Render... Placeholder URL]
+- **Live API (Backend):** [https://ecommerce-fullstack-f6i5.onrender.com](https://ecommerce-fullstack-f6i5.onrender.com)
 - **GitHub Repository:** [https://github.com/sukhwalpavan/ecommerce-fullstack](https://github.com/sukhwalpavan/ecommerce-fullstack)
 
 ## 🛠️ Technology Stack
