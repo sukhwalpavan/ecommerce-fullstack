@@ -1,0 +1,19 @@
+# IntelliJ IDE
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Maven (Backend)
+backend/target/
+
+# Node (Frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# General
+.DS_Store
+*.log
