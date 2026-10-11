@@ -63,8 +63,11 @@ VITE_API_URL=http://localhost:8080/api
 
 ## 🗄️ Database Configuration (PostgreSQL)
 This project uses **Neon** as a managed cloud PostgreSQL provider.
-- **Schema & Migration:** The project uses Hibernate's `ddl-auto=update` to automatically generate the required database schema (Users, Products, Orders, OrderItems) upon application startup.
-- **Sample Data:** The application includes a `DataSeeder.java` file which implements `CommandLineRunner`. When the application starts, it checks if the products table is empty. If empty, it automatically inserts 6 high-quality premium products into the database.
+- **SQL Scripts:**
+  - `db/schema.sql` - Full PostgreSQL DDL schema definition for `users`, `products`, `orders`, and `order_items` tables with foreign keys and constraints.
+  - `db/data.sql` - Initial seed data with 6 high-quality premium products.
+- **Schema & Migration:** The project uses Hibernate's `ddl-auto=update` to automatically generate the database schema upon application startup.
+- **Automatic Seeding:** The application includes `DataSeeder.java` (`CommandLineRunner`), which seeds products on first boot if the database is fresh.
 
 ## 💻 Local Setup Instructions
 

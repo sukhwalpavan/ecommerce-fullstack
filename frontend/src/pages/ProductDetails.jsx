@@ -2,28 +2,38 @@ import { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import { CartContext } from '../context/CartContext';
-import { ShoppingCart, ArrowLeft } from 'lucide-react';
+import ProductCard from '../components/ProductCard';
+import { ShoppingCart, ArrowLeft, ShieldCheck, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useContext(CartContext);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductAndRelated = async () => {
+      setLoading(true);
       try {
         const { data } = await api.get(`/products/${id}`);
         setProduct(data);
+        
+        // Fetch related products in same category
+        const { data: allProducts } = await api.get('/products');
+        setRelated(
+          allProducts.filter(p => p.id !== Number(id) && p.category === data.category).slice(0, 3)
+        );
       } catch (error) {
         console.error('Error fetching product', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchProduct();
+    fetchProductAndRelated();
+    window.scrollTo(0, 0);
   }, [id]);
 
   const handleAddToCart = () => {
@@ -31,7 +41,7 @@ const ProductDetails = () => {
     toast.success(`${quantity} ${product.name} added to cart!`);
   };
 
-  if (loading) return <div className="page container" style={{ textAlign: 'center', paddingTop: '3rem' }}>Loading...</div>;
+  if (loading) return <div className="page container" style={{ textAlign: 'center', paddingTop: '3rem' }}>Loading product details...</div>;
   if (!product) return <div className="page container" style={{ textAlign: 'center', paddingTop: '3rem' }}>Product not found.</div>;
 
   return (
@@ -40,12 +50,12 @@ const ProductDetails = () => {
         <ArrowLeft size={16} /> Back to Products
       </Link>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', background: 'white', padding: '2.5rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', marginBottom: '4rem' }}>
         <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
           <img 
             src={product.imageUrl || 'https://via.placeholder.com/600x600?text=No+Image'} 
             alt={product.name} 
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ width: '100%', height: '100%', maxHeight: '450px', objectFit: 'cover' }}
           />
         </div>
         
@@ -59,14 +69,23 @@ const ProductDetails = () => {
           <p style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: 'var(--text-main)' }}>
             ${product.price.toFixed(2)}
           </p>
-          <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.6' }}>
+          <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.6' }}>
             {product.description}
           </p>
           
-          <div style={{ marginBottom: '2rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
             <span style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-              Availability: {product.stockQuantity > 0 ? <span style={{ color: 'green' }}>In Stock ({product.stockQuantity})</span> : <span style={{ color: 'red' }}>Out of Stock</span>}
+              Availability: {product.stockQuantity > 0 ? (
+                <span style={{ color: 'green', fontWeight: '600' }}>In Stock ({product.stockQuantity} units available)</span>
+              ) : (
+                <span style={{ color: 'red', fontWeight: '600' }}>Out of Stock</span>
+              )}
             </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Truck size={18} /> Free Express Delivery</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldCheck size={18} /> 1-Year Warranty</span>
           </div>
 
           {product.stockQuantity > 0 && (
@@ -93,6 +112,18 @@ const ProductDetails = () => {
           )}
         </div>
       </div>
+
+      {/* Related Products Section */}
+      {related.length > 0 && (
+        <div style={{ marginTop: '3rem' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1.5rem' }}>Related Products</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
+            {related.map(relProduct => (
+              <ProductCard key={relProduct.id} product={relProduct} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
