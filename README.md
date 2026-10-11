@@ -3,7 +3,7 @@
 A fully functional, responsive e-commerce platform built with React.js, Java Spring Boot, and PostgreSQL (Neon).
 
 ## 🌐 Live Demo & Links
-- **Live Website (Frontend):** [Deploying to Vercel... Placeholder URL]
+- **Live Website (Frontend):** [https://ecommerce-fullstack-ruddy.vercel.app](https://ecommerce-fullstack-ruddy.vercel.app)
 - **Live API (Backend):** [https://ecommerce-fullstack-f6i5.onrender.com](https://ecommerce-fullstack-f6i5.onrender.com)
 - **GitHub Repository:** [https://github.com/sukhwalpavan/ecommerce-fullstack](https://github.com/sukhwalpavan/ecommerce-fullstack)
 
