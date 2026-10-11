@@ -26,6 +26,7 @@ const Navbar = () => {
         <nav className="nav-links">
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/products" className="nav-link">Shop</Link>
+          {user && <Link to="/orders" className="nav-link">My Orders</Link>}
         </nav>
         <div className="nav-actions">
           <Link to="/cart" className="cart-icon-wrapper">

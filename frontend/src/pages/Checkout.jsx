@@ -51,7 +51,10 @@ const Checkout = () => {
         <CheckCircle size={64} style={{ margin: '0 auto 2rem auto', color: 'green' }} />
         <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Order Placed Successfully!</h2>
         <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Thank you for shopping with us.</p>
-        <button onClick={() => navigate('/products')} className="btn btn-primary">Continue Shopping</button>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          <button onClick={() => navigate('/orders')} className="btn btn-primary">View My Orders</button>
+          <button onClick={() => navigate('/products')} className="btn btn-outline">Continue Shopping</button>
+        </div>
       </div>
     );
   }
