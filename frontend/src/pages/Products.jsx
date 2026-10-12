@@ -1,16 +1,24 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
-import { Search, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { Search, SlidersHorizontal, ArrowUpDown, X, RotateCcw } from 'lucide-react';
 
 const Products = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(searchParams.get('category') || '');
   const [maxPrice, setMaxPrice] = useState(500);
   const [sortBy, setSortBy] = useState('default');
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(8);
+
+  // Sync category state if searchParams change
+  useEffect(() => {
+    const cat = searchParams.get('category') || '';
+    setCategory(cat);
+  }, [searchParams]);
 
   useEffect(() => {
     fetchProducts();
@@ -21,13 +29,19 @@ const Products = () => {
     try {
       let url = '/products';
       if (category) {
-        url = `/products/category/${encodeURIComponent(category)}`;
+        url = `/products?category=${encodeURIComponent(category)}`;
       }
-      
       const { data } = await api.get(url);
       setProducts(data);
     } catch (error) {
       console.error('Error fetching products', error);
+      // Fallback: fetch all and filter in frontend
+      try {
+        const { data } = await api.get('/products');
+        setProducts(data);
+      } catch (e) {
+        console.error('Fallback fetch failed', e);
+      }
     } finally {
       setLoading(false);
     }
@@ -35,13 +49,31 @@ const Products = () => {
 
   const categories = ['Electronics', 'Home', 'Accessories'];
 
-  // Client-side filtering & sorting
+  const handleCategorySelect = (selectedCat) => {
+    setCategory(selectedCat);
+    if (selectedCat) {
+      setSearchParams({ category: selectedCat });
+    } else {
+      setSearchParams({});
+    }
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setCategory('');
+    setMaxPrice(500);
+    setSortBy('default');
+    setSearchParams({});
+  };
+
+  // Filter & sort logic
   const filteredProducts = products
     .filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
                             product.description?.toLowerCase().includes(search.toLowerCase());
-      const matchesPrice = product.price <= maxPrice;
-      return matchesSearch && matchesPrice;
+      const matchesCategory = category ? product.category?.toLowerCase() === category.toLowerCase() : true;
+      const matchesPrice = Number(product.price) <= maxPrice;
+      return matchesSearch && matchesCategory && matchesPrice;
     })
     .sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
@@ -54,48 +86,50 @@ const Products = () => {
 
   return (
     <div className="page container">
-      <div style={{ marginBottom: '3rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '1rem' }}>All Products</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Explore our curated premium collection.</p>
+      {/* Page Header */}
+      <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
+        <h1 style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', marginBottom: '0.5rem' }}>All Products</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Browse and filter through our full catalog of premium goods.</p>
       </div>
 
-      {/* Filters & Search Toolbar */}
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        gap: '1.25rem', 
-        background: 'white', 
-        padding: '1.5rem', 
-        borderRadius: 'var(--radius-lg)', 
-        boxShadow: 'var(--shadow-sm)', 
-        marginBottom: '2rem' 
-      }}>
-        {/* Top Row: Search and Category Buttons */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: '1', minWidth: '260px' }}>
-            <Search size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      {/* Main Filter & Search Toolbar */}
+      <div className="toolbar-card">
+        {/* Search Bar & Category Pills */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ position: 'relative', width: '100%' }}>
+            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
             <input 
               type="text" 
-              placeholder="Search products by name or description..." 
+              placeholder="Search products by title or keywords..." 
               className="input-field" 
-              style={{ paddingLeft: '3rem' }}
+              style={{ paddingLeft: '2.75rem', paddingRight: search ? '2.5rem' : '1rem' }}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {search && (
+              <button 
+                onClick={() => setSearch('')}
+                style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}
+                aria-label="Clear search"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
           
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {/* Category Filter Pills (Horizontal scrollable on mobile) */}
+          <div className="filter-categories-pills">
             <button 
-              className={`btn ${category === '' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setCategory('')}
+              className={`pill-btn ${category === '' ? 'active' : ''}`}
+              onClick={() => handleCategorySelect('')}
             >
               All Categories
             </button>
             {categories.map(cat => (
               <button 
                 key={cat}
-                className={`btn ${category === cat ? 'btn-primary' : 'btn-outline'}`}
-                onClick={() => setCategory(cat)}
+                className={`pill-btn ${category.toLowerCase() === cat.toLowerCase() ? 'active' : ''}`}
+                onClick={() => handleCategorySelect(cat)}
               >
                 {cat}
               </button>
@@ -103,39 +137,45 @@ const Products = () => {
           </div>
         </div>
 
-        {/* Bottom Row: Price Range Slider & Sorting Dropdown */}
+        {/* Sub-toolbar: Price Range Slider & Sorting Dropdown */}
         <div style={{ 
           display: 'flex', 
           flexWrap: 'wrap', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           paddingTop: '1rem', 
-          borderTop: '1px solid var(--border-color)',
+          borderTop: '1px solid var(--card-border)',
           gap: '1rem'
         }}>
           {/* Price Range Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <SlidersHorizontal size={18} style={{ color: 'var(--text-muted)' }} />
-            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Max Price:</span>
-            <input 
-              type="range" 
-              min="10" 
-              max="500" 
-              step="10"
-              value={maxPrice} 
-              onChange={(e) => setMaxPrice(Number(e.target.value))}
-              style={{ accentColor: 'var(--primary)', cursor: 'pointer' }}
-            />
-            <span style={{ fontWeight: '700', fontSize: '0.95rem', minWidth: '55px' }}>${maxPrice}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>
+              <SlidersHorizontal size={16} />
+              <span>Max Price:</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <input 
+                type="range" 
+                min="10" 
+                max="500" 
+                step="10"
+                value={maxPrice} 
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                style={{ accentColor: 'var(--accent)', cursor: 'pointer', width: '130px' }}
+              />
+              <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent)', minWidth: '45px' }}>
+                ${maxPrice}
+              </span>
+            </div>
           </div>
 
           {/* Sort Criteria */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <ArrowUpDown size={18} style={{ color: 'var(--text-muted)' }} />
-            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Sort by:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <ArrowUpDown size={16} style={{ color: 'var(--text-muted)' }} />
+            <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-muted)' }}>Sort by:</span>
             <select 
               className="input-field" 
-              style={{ padding: '0.4rem 0.8rem', width: 'auto' }}
+              style={{ padding: '0.45rem 0.85rem', width: 'auto', fontSize: '0.9rem' }}
               value={sortBy} 
               onChange={(e) => setSortBy(e.target.value)}
             >
@@ -148,42 +188,61 @@ const Products = () => {
         </div>
       </div>
 
-      {/* Showing count */}
-      <div style={{ marginBottom: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-        Showing {displayedProducts.length} of {filteredProducts.length} products
+      {/* Showing count and reset button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          Showing <strong>{displayedProducts.length}</strong> of <strong>{filteredProducts.length}</strong> products
+        </span>
+        
+        {(search || category || maxPrice < 500 || sortBy !== 'default') && (
+          <button 
+            onClick={handleResetFilters} 
+            className="btn btn-ghost btn-sm"
+            style={{ color: 'var(--accent)', gap: '0.35rem' }}
+          >
+            <RotateCcw size={14} /> Reset Filters
+          </button>
+        )}
       </div>
 
       {/* Product Grid */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem' }}>Loading products...</div>
+        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+          Loading products...
+        </div>
       ) : displayedProducts.length === 0 ? (
         <div style={{ 
           textAlign: 'center', 
           padding: '4rem 2rem', 
           background: 'white', 
-          borderRadius: 'var(--radius-lg)', 
-          color: 'var(--text-muted)' 
+          borderRadius: 'var(--radius-xl)', 
+          border: '1px solid var(--card-border)',
+          color: 'var(--text-muted)',
+          maxWidth: '500px',
+          margin: '0 auto'
         }}>
-          <h3>No products found</h3>
-          <p style={{ marginTop: '0.5rem' }}>Try adjusting your search query, category, or price range filter.</p>
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>No products found</h3>
+          <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem' }}>Try adjusting your search query, department, or max price range.</p>
+          <button onClick={handleResetFilters} className="btn btn-primary btn-sm">
+            Reset All Filters
+          </button>
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
+          <div className="product-grid">
             {displayedProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
-          {/* Load More / Pagination feature */}
+          {/* Load More Button */}
           {visibleCount < filteredProducts.length && (
-            <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <div style={{ textAlign: 'center', marginTop: '3.5rem' }}>
               <button 
                 onClick={() => setVisibleCount(prev => prev + 6)} 
-                className="btn btn-outline"
-                style={{ padding: '0.75rem 2rem' }}
+                className="btn btn-outline btn-lg"
               >
-                Load More Products
+                Load More Products ({filteredProducts.length - visibleCount} remaining)
               </button>
             </div>
           )}

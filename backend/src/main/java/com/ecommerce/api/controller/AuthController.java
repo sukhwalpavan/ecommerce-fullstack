@@ -14,7 +14,11 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
+    public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
         return ResponseEntity.ok(userService.registerUser(user));
     }
 
@@ -22,6 +26,19 @@ public class AuthController {
     public ResponseEntity<User> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(userService.loginUser(request.getEmail(), request.getPassword()));
     }
+}
+
+class RegisterRequest {
+    private String name;
+    private String email;
+    private String password;
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }
 
 class LoginRequest {
