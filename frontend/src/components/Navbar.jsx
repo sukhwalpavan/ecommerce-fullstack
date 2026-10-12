@@ -63,43 +63,45 @@ const Navbar = () => {
             {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
           </Link>
 
-          {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div 
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem',
-                  background: '#F1F5F9',
-                  padding: '0.4rem 0.85rem',
-                  borderRadius: 'var(--radius-full)',
-                  fontSize: '0.88rem',
-                  fontWeight: '600'
-                }}
-              >
-                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--accent)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>
-                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          <div className="nav-user-desktop">
+            {user ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    background: '#F1F5F9',
+                    padding: '0.4rem 0.85rem',
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: '0.88rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--accent)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <span style={{ maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.name?.split(' ')[0] || 'Account'}
+                  </span>
                 </div>
-                <span style={{ maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {user.name?.split(' ')[0] || 'Account'}
-                </span>
+                <button 
+                  onClick={handleLogout} 
+                  className="btn-icon" 
+                  title="Log Out"
+                  aria-label="Log Out"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <LogOut size={18} />
+                </button>
               </div>
-              <button 
-                onClick={handleLogout} 
-                className="btn-icon" 
-                title="Log Out"
-                aria-label="Log Out"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
-          ) : (
-            <Link to="/login" className="btn btn-primary btn-sm" onClick={closeMenu}>
-              <User size={16} />
-              <span>Login</span>
-            </Link>
-          )}
+            ) : (
+              <Link to="/login" className="btn btn-primary btn-sm" onClick={closeMenu}>
+                <User size={16} />
+                <span>Login</span>
+              </Link>
+            )}
+          </div>
 
           {/* Mobile Menu Hamburger Toggle */}
           <button 

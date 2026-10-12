@@ -130,13 +130,27 @@
   display: none;
 }
 
+.nav-user-desktop {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 @media (max-width: 768px) {
   .nav-container {
-    height: 64px;
+    height: 60px;
   }
 
   .nav-links {
     display: none;
+  }
+
+  .nav-user-desktop {
+    display: none !important;
+  }
+
+  .nav-actions {
+    gap: 0.6rem;
   }
 
   .mobile-menu-toggle {
@@ -197,8 +211,8 @@
 
 @media (max-width: 640px) {
   .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.85rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 }
 
