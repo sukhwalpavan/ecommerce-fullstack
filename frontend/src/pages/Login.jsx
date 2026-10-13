@@ -15,9 +15,11 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     try {
-      await login(email, password);
+      const cleanEmail = email.trim().toLowerCase();
+      await login(cleanEmail, password);
       toast.success('Welcome back!');
       const redirect = searchParams.get('redirect') || '/';
       navigate(redirect);

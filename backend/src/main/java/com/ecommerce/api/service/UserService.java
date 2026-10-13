@@ -12,15 +12,22 @@ public class UserService {
     private UserRepository userRepository;
 
     public User registerUser(User user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+        String normalizedEmail = user.getEmail() != null ? user.getEmail().trim().toLowerCase() : "";
+        user.setEmail(normalizedEmail);
+        if (user.getName() != null) {
+            user.setName(user.getName().trim());
+        }
+
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            throw new RuntimeException("An account with this email already exists. Please log in instead.");
         }
         // In a real app, hash password here (e.g. BCrypt)
         return userRepository.save(user);
     }
 
     public User loginUser(String email, String password) {
-        Optional<User> user = userRepository.findByEmail(email);
+        String normalizedEmail = email != null ? email.trim().toLowerCase() : "";
+        Optional<User> user = userRepository.findByEmail(normalizedEmail);
         if (user.isPresent() && user.get().getPassword().equals(password)) {
             return user.get();
         }

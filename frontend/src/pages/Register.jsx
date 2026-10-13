@@ -1,8 +1,8 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'sonner';
-import { UserPlus, Eye, EyeOff, ShoppingBag } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, ShoppingBag, AlertCircle } from 'lucide-react';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -10,25 +10,56 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const submittingRef = useRef(false);
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (loading || submittingRef.current) return;
+
     if (password.length < 6) {
       toast.error('Password must be at least 6 characters long');
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
+    setErrorMessage('');
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+
     try {
-      await register({ name, email, password });
+      await register({ name: cleanName, email: cleanEmail, password });
       toast.success('Account created successfully!');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
+      const serverMsg = error.response?.data?.message || '';
+      const isDuplicate = 
+        error.response?.status === 409 ||
+        serverMsg.toLowerCase().includes('duplicate') ||
+        serverMsg.toLowerCase().includes('already exists') ||
+        serverMsg.toLowerCase().includes('unique constraint');
+
+      if (isDuplicate) {
+        const friendlyMsg = 'An account with this email already exists. Please sign in instead.';
+        setErrorMessage(friendlyMsg);
+        toast.error(friendlyMsg, {
+          action: {
+            label: 'Sign in',
+            onClick: () => navigate('/login')
+          }
+        });
+      } else {
+        const fallbackMsg = serverMsg || 'Registration failed. Please try again.';
+        setErrorMessage(fallbackMsg);
+        toast.error(fallbackMsg);
+      }
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
@@ -110,6 +141,33 @@ const Register = () => {
               </button>
             </div>
           </div>
+
+          {errorMessage && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#991b1b',
+              padding: '0.85rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.88rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.5rem'
+            }}>
+              <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <div>{errorMessage}</div>
+                {errorMessage.includes('already exists') && (
+                  <div style={{ marginTop: '0.4rem' }}>
+                    <Link to="/login" style={{ color: '#b91c1c', fontWeight: '700', textDecoration: 'underline' }}>
+                      Click here to Sign In &rarr;
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <button 
             type="submit" 
